@@ -95,6 +95,14 @@ def buscar_candidato(db: Session, candidato_id: int):
         models.Candidato.id == candidato_id
     ).first()
 
+def atualizar_candidato(db: Session, candidato_id: int, status_id: int):
+    candidato = buscar_candidato(db, candidato_id)
+    if candidato:
+        candidato.status_id = status_id
+        db.commit()
+        db.refresh(candidato)
+    return candidato
+
 
 def deletar_candidato(db: Session, candidato_id: int):
     candidato = buscar_candidato(db, candidato_id)

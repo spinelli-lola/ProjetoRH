@@ -2,8 +2,16 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import engine, Base, SessionLocal
 from app import crud, schemas
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # CRIA AS TABELAS AO INICIAR
 @app.on_event("startup")
@@ -17,8 +25,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-#  FUNCIONÁRIOS
 
 @app.post("/funcionarios", response_model=schemas.FuncionarioResponse)
 def criar_funcionario(funcionario: schemas.FuncionarioCreate, db: Session = Depends(get_db)):
@@ -49,8 +55,6 @@ def deletar_funcionario(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Funcionário não encontrado")
     return {"message": "Funcionário removido com sucesso"}
 
-# CANDIDATOS 
-
 @app.post("/candidatos", response_model=schemas.CandidatoResponse)
 def criar_candidato(candidato: schemas.CandidatoCreate, db: Session = Depends(get_db)):
     return crud.criar_candidato(db, candidato)
@@ -58,6 +62,13 @@ def criar_candidato(candidato: schemas.CandidatoCreate, db: Session = Depends(ge
 @app.get("/candidatos", response_model=list[schemas.CandidatoResponse])
 def listar_candidatos(db: Session = Depends(get_db)):
     return crud.listar_candidatos(db)
+
+@app.put("/candidatos/{id}/status", response_model=schemas.CandidatoResponse)
+def atualizar_status_candidato(id: int, status_id: int, db: Session = Depends(get_db)):
+    candidato = crud.atualizar_candidato(db, id, status_id)
+    if not candidato:
+        raise HTTPException(status_code=404, detail="Candidato não encontrado")
+    return candidato
 
 #  VAGAS
 

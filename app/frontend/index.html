@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Operação RH</title>
+
+  <style>
+    .kanban{
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+        background-color: darkgray;
+        min-height: 100vh;
+    }
+    .coluna{
+        background-color: lightblue;
+        padding: 15px;
+        flex: 1;
+    }
+    .cards{
+        background-color: thistle;
+        min-height: 250px;
+        padding: 10px;
+        min-height: 90vh;
+    }
+    .card{
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+        margin: 5px;
+        position: relative;
+    }
+    .modal{
+        display:none; 
+        position:fixed; 
+        top:0; 
+        left:0; 
+        width:100%; 
+        height:100%; 
+        background:rgba(0,0,0,0.5);
+    }
+    .botaoAdicionar{
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+    }
+    .botaoAdicionar:hover{
+        background-color: #0056b3;
+    }
+    .modalDO{
+        background:white; 
+        padding:20px; 
+        width:300px; 
+        margin:100px auto;
+    }
+    .cardTopo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    }
+
+    .cardTopo p {
+        margin: 0;
+    }
+
+    .botaoExcluir {
+        margin-left: auto;
+    }
+    .botaoExcluidos {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 8px;
+        background-color: #343a40;
+        color: white;
+        cursor: pointer;
+        z-index: 20;
+    }
+
+    .botaoExcluidos:hover {
+        background-color: #212529;
+    }
+</style>
+
+</head>
+    
+</script>
+
+<body>
+
+  <button class="botaoExcluidos" onclick="abrirExcluidos()">Excluídos</button>
+   
+  <div class="kanban">
+    <div class="coluna">
+        <h2><b>Novo</b></h2>
+        <div class="cards" id="colunaNovo">
+            
+        </div>
+    </div>
+    <div class="coluna">
+        <h2><b>Em Análise</b></h2>
+        <div class="cards" id="colunaAnalise">
+
+        </div>
+    </div>
+    <div class="coluna">
+        <h2><b>Aprovado</b></h2>
+        <div class="cards" id="colunaAprovado">
+            
+        </div>
+    </div>
+    <div class="coluna">
+        <h2><b>Reprovado</b></h2>
+        <div class="cards" id="colunaReprovado">
+            
+        </div>
+    </div>
+  </div>
+
+  <button class="botaoAdicionar" onclick="abrirModal()">+</button>
+
+    <div id="modal" class="modal">
+
+        <div class="modalDO">
+            <h3>Novo Candidato</h3>
+
+            <input type="text" id="candidatoNome" placeholder="Nome">
+            <input type="email" id="candidatoEmail" placeholder="Email">
+            <br>
+            <button onclick="criarCandidato()">Salvar</button>
+            <button onclick="fecharModal()">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modalExcluidos" class="modal">
+        <div style="background:white; padding:20px; width:400px; margin:100px auto;">
+            <h3>Candidatos Excluídos</h3>
+
+            <div id="listaExcluidos"></div>
+
+            <button onclick="fecharExcluidos()">Fechar</button>
+        </div>
+    </div>
+
+
+
+    <script>
+        const apiUrl = "http://localhost:8000";
+
+        async function carregarCandidatos(){
+
+            const colunaNovo = document.getElementById("colunaNovo");
+            const colunaAnalise = document.getElementById("colunaAnalise");
+            const colunaAprovado = document.getElementById("colunaAprovado");
+            const colunaReprovado = document.getElementById("colunaReprovado");
+
+            try{
+                const resposta = await fetch(`${apiUrl}/candidatos`);
+                const candidatos = await resposta.json();
+
+                console.log("Candidatos:", candidatos);
+
+                colunaNovo.innerHTML = "";
+                colunaAnalise.innerHTML= "";
+                colunaAprovado.innerHTML = "";
+                colunaReprovado.innerHTML = "";
+
+                candidatos.forEach(candidato => {
+                    const card = criarCard(candidato);
+
+                    if (candidato.status_id === 1) colunaNovo.appendChild(card);
+                    if (candidato.status_id === 2) colunaAnalise.appendChild(card);
+                    if (candidato.status_id === 3) colunaAprovado.appendChild(card);
+                    if (candidato.status_id === 4) colunaReprovado.appendChild(card);
+                });
+
+            } catch (erro) {
+                console.error("Erro ao carregar candidatos:", erro);
+            }
+        }
+        carregarCandidatos();
+
+        //criar card
+        function criarCard(candidato) {
+
+            const card = document.createElement("div");
+            card.className = "card";
+            card.draggable = true;
+            card.dataset.id = candidato.id;
+
+            card.innerHTML = `
+                <div class="cardTopo">
+                    <p><strong>${candidato.nome}</strong></p>
+                    <button class="botaoExcluir" onclick="deletarCard(this)">×</button>
+                </div>
+                <small>${candidato.email}</small>
+            `;
+
+            card.addEventListener("dragstart", (event) => {
+                event.dataTransfer.setData("candidatoId", candidato.id);
+            });
+        return card;
+        }
+
+        async function deletarCard(botao) {
+            const confirmar = confirm("Deseja mover o card para Excluídos?");
+
+            if (!confirmar) {
+                return;
+            }
+
+            const card = botao.closest(".card");
+            const candidatoId = card.dataset.id;
+
+            await atualizarStatusCandidato(candidatoId, 5);
+            await carregarCandidatos();
+        }
+
+        //config coluna
+        function configurarColuna(idColuna, statusId) {
+            
+            const coluna = document.getElementById(idColuna);
+
+            coluna.addEventListener("dragover", (event) => {
+                event.preventDefault();
+            });
+
+            coluna.addEventListener("drop", async (event) => {
+                event.preventDefault();
+
+                const candidatoId = event.dataTransfer.getData("candidatoId");
+                const card = document.querySelector(`[data-id='${candidatoId}']`);
+
+                //primeiro move o card
+                if (card) {
+                    coluna.appendChild(card);
+                }
+                //dai o querido salva o novo status
+                await atualizarStatusCandidato(candidatoId, statusId);
+            });
+            }
+
+            configurarColuna("colunaNovo", 1);
+            configurarColuna("colunaAnalise", 2);
+            configurarColuna("colunaAprovado", 3);
+            configurarColuna("colunaReprovado", 4);
+        
+            async function atualizarStatusCandidato(candidatoId, novoStatusId) {
+                const resposta = await fetch(
+                    `${apiUrl}/candidatos/${candidatoId}/status?status_id=${novoStatusId}`,
+                    { method: "PUT" }
+                );
+
+                if (!resposta.ok) {
+                    console.error("Erro ao atualizar status:", await resposta.text());
+                    return;
+                }
+
+                await carregarCandidatos();
+            }
+
+            async function criarCandidato() {
+                const candidatoNome = document.getElementById("candidatoNome").value.trim();
+                const candidatoEmail = document.getElementById("candidatoEmail").value.trim();
+
+                if (candidatoNome === "" && candidatoEmail === "") {
+                    alert("Preencha o nome e email.");
+                    return;
+                }
+                if (candidatoNome === "") {
+                    alert("Preencha o nome.");
+                    return;
+                }
+                if (candidatoEmail === "") {
+                    alert("Preencha o email.");
+                    return;
+                }
+
+                const resposta = await fetch(`${apiUrl}/candidatos`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nome: candidatoNome,
+                        email: candidatoEmail,
+                        vaga_id: 1,
+                        status_id: 1
+                    })
+                });
+
+                if (!resposta.ok) {
+                    console.error("Erro ao criar candidato:", await resposta.text());
+                    return;
+                }
+
+                fecharModal();
+                await carregarCandidatos();
+            }
+
+            function abrirModal() {
+                document.getElementById("modal").style.display = "block";
+                document.getElementById("candidatoNome").focus();
+                document.getElementById("candidatoNome").value = "";
+                document.getElementById("candidatoEmail").value = "";
+            }
+
+            function fecharModal() {
+                document.getElementById("modal").style.display = "none";
+            }
+
+            document.getElementById("modal").addEventListener("click", function(event) {
+                if (event.target.id === "modal") {
+                    fecharModal();
+                }
+            });
+
+            async function abrirExcluidos() {
+                const modalExcluidos = document.getElementById("modalExcluidos");
+                const listaExcluidos = document.getElementById("listaExcluidos");
+
+                listaExcluidos.innerHTML = "";
+
+                try {
+                    const resposta = await fetch(`${apiUrl}/candidatos`);
+                    const candidatos = await resposta.json();
+
+                    const excluidos = candidatos.filter(candidato => candidato.status_id === 5);
+
+                    if (excluidos.length === 0) {
+                        listaExcluidos.innerHTML = "<p>Nenhum candidato excluído.</p>";
+                    }
+
+                    excluidos.forEach(candidato => {
+                        const card = document.createElement("div");
+                        card.className = "card";
+
+                        card.innerHTML = `
+                            <p><strong>${candidato.nome}</strong></p>
+                            <small>${candidato.email}</small>
+                            <br><br>
+                            <button onclick="restaurarCandidato(${candidato.id})">Restaurar</button>
+                        `;
+
+                        listaExcluidos.appendChild(card);
+                    });
+
+                    modalExcluidos.style.display = "block";
+
+                } catch (erro) {
+                    console.error("Erro ao carregar excluídos:", erro);
+                    alert("Erro ao carregar candidatos excluídos.");
+                }
+            }
+
+            function fecharExcluidos() {
+                document.getElementById("modalExcluidos").style.display = "none";
+            }
+
+            async function restaurarCandidato(candidatoId) {
+                await atualizarStatusCandidato(candidatoId, 1);
+
+                fecharExcluidos();
+                await carregarCandidatos();
+            }
+    </script>
+</body>
+</html>

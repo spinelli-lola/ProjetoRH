@@ -12,6 +12,7 @@ class Funcionario(Base):
     nome = Column(String(100), nullable=False)
     cargo = Column(String(100), nullable=False)
     salario = Column(Float, nullable=False)
+    status_id = Column(Integer, nullable=False, default=1) # 1 Novo - 2 Em análise - 3 Aprovado
 
     vagas = relationship("Vaga", back_populates="responsavel")
 
