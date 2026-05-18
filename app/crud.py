@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 
 
-#  FUNCIONÁRIOS
+# FUNCIONÁRIOS
 
 def criar_funcionario(db: Session, funcionario: schemas.FuncionarioCreate):
     db_funcionario = models.Funcionario(**funcionario.dict())
@@ -42,7 +42,7 @@ def deletar_funcionario(db: Session, funcionario_id: int):
     return None
 
 
-#  STATUS PROCESSO 
+# STATUS PROCESSO
 
 def criar_status(db: Session, status: schemas.StatusCreate):
     obj = models.StatusProcesso(**status.dict())
@@ -56,7 +56,7 @@ def listar_status(db: Session):
     return db.query(models.StatusProcesso).all()
 
 
-#  VAGAS
+# VAGAS
 
 def criar_vaga(db: Session, vaga: schemas.VagaCreate):
     obj = models.Vaga(**vaga.dict())
@@ -76,7 +76,13 @@ def buscar_vaga(db: Session, vaga_id: int):
     ).first()
 
 
-#  CANDIDATOS
+# CANDIDATOS
+
+def buscar_candidato_por_email(db: Session, email: str):
+    return db.query(models.Candidato).filter(
+        models.Candidato.email == email
+    ).first()
+
 
 def criar_candidato(db: Session, candidato: schemas.CandidatoCreate):
     obj = models.Candidato(**candidato.dict())
@@ -87,13 +93,14 @@ def criar_candidato(db: Session, candidato: schemas.CandidatoCreate):
 
 
 def listar_candidatos(db: Session):
-    return db.query(models.Candidato).all()
+    return db.query(models.Candidato).order_by(models.Candidato.id.desc()).all()
 
 
 def buscar_candidato(db: Session, candidato_id: int):
     return db.query(models.Candidato).filter(
         models.Candidato.id == candidato_id
     ).first()
+
 
 def atualizar_candidato(db: Session, candidato_id: int, status_id: int):
     candidato = buscar_candidato(db, candidato_id)

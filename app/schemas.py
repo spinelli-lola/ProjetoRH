@@ -2,8 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-#  FUNCIONÁRIO 
-
+# FUNCIONÁRIO
 class FuncionarioBase(BaseModel):
     nome: str
     cargo: str
@@ -21,8 +20,7 @@ class FuncionarioResponse(FuncionarioBase):
         orm_mode = True
 
 
-#  STATUS PROCESSO 
-
+# STATUS PROCESSO
 class StatusBase(BaseModel):
     nome: str
 
@@ -38,8 +36,7 @@ class StatusResponse(StatusBase):
         orm_mode = True
 
 
-#  VAGA
-
+# VAGA
 class VagaBase(BaseModel):
     titulo: str
     descricao: Optional[str] = None
@@ -57,11 +54,11 @@ class VagaResponse(VagaBase):
         orm_mode = True
 
 
-#  CANDIDATO
-
+# CANDIDATO
 class CandidatoBase(BaseModel):
     nome: str
     email: str
+    telefone: str
     vaga_id: int
     status_id: int
 
@@ -72,6 +69,7 @@ class CandidatoCreate(CandidatoBase):
 
 class CandidatoResponse(CandidatoBase):
     id: int
+    telefone: Optional[str] = None
 
     class Config:
         orm_mode = True
