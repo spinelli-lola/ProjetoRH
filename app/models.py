@@ -3,8 +3,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
-#  FUNCIONÁRIOS
-
+# FUNCIONÁRIOS
 class Funcionario(Base):
     __tablename__ = "funcionarios"
 
@@ -12,12 +11,12 @@ class Funcionario(Base):
     nome = Column(String(100), nullable=False)
     cargo = Column(String(100), nullable=False)
     salario = Column(Float, nullable=False)
+    status_id = Column(Integer, nullable=False, default=1)
 
     vagas = relationship("Vaga", back_populates="responsavel")
 
 
-#  STATUS PROCESSO SELETIVO
-
+# STATUS PROCESSO SELETIVO
 class StatusProcesso(Base):
     __tablename__ = "status_processo"
 
@@ -27,29 +26,27 @@ class StatusProcesso(Base):
     candidatos = relationship("Candidato", back_populates="status")
 
 
-#  VAGAS
-
+# VAGAS
 class Vaga(Base):
     __tablename__ = "vagas"
 
     id = Column(Integer, primary_key=True, index=True)
     titulo = Column(String(100), nullable=False)
     descricao = Column(String(255))
-
     funcionario_id = Column(Integer, ForeignKey("funcionarios.id"))
 
     responsavel = relationship("Funcionario", back_populates="vagas")
     candidatos = relationship("Candidato", back_populates="vaga")
 
 
-#  CANDIDATOS
-
+# CANDIDATOS
 class Candidato(Base):
     __tablename__ = "candidatos"
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
+    telefone = Column(String(20), nullable=True)
 
     vaga_id = Column(Integer, ForeignKey("vagas.id"))
     status_id = Column(Integer, ForeignKey("status_processo.id"))

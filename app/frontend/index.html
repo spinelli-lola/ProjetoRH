@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operação RH</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+        }
+
+        .topo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 22px 28px;
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topo h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #111827;
+        }
+
+        .topo p {
+            margin: 4px 0 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .acoesTopo {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .botaoExcluidos,
+        .botaoPrimario,
+        .botaoSecundario,
+        .botaoRestaurar {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .botaoExcluidos {
+            background: #111827;
+            color: #ffffff;
+        }
+
+        .botaoExcluidos:hover {
+            background: #374151;
+        }
+
+        .botaoPrimario {
+            width: 100%;
+            background: #2563eb;
+            color: #ffffff;
+        }
+
+        .botaoPrimario:hover {
+            background: #1d4ed8;
+        }
+
+        .botaoPrimario:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .botaoSecundario {
+            width: 100%;
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .botaoSecundario:hover {
+            background: #d1d5db;
+        }
+
+        .kanban {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(220px, 1fr));
+            gap: 18px;
+            padding: 24px;
+            min-height: calc(100vh - 86px);
+        }
+
+        .coluna {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
+            padding: 14px;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+        }
+
+        .tituloColuna {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .tituloColuna h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .contador {
+            min-width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .cards {
+            min-height: 68vh;
+            border-radius: 14px;
+            padding: 8px;
+            background: #f9fafb;
+            border: 1px dashed #d1d5db;
+            transition: 0.2s;
+        }
+
+        .cards.dragover {
+            background: #eff6ff;
+            border-color: #2563eb;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+            cursor: grab;
+            transition: 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .cardTopo {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .cardNome {
+            margin: 0;
+            font-weight: 800;
+            color: #111827;
+            line-height: 1.3;
+        }
+
+        .cardInfo {
+            margin: 8px 0 0;
+            display: grid;
+            gap: 4px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .botaoExcluir {
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .botaoExcluir:hover {
+            background: #fecaca;
+        }
+
+        .botaoAdicionar {
+            position: fixed;
+            bottom: 26px;
+            right: 26px;
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            border: none;
+            background: #2563eb;
+            color: white;
+            font-size: 34px;
+            cursor: pointer;
+            box-shadow: 0 16px 34px rgba(37, 99, 235, 0.35);
+            z-index: 20;
+        }
+
+        .botaoAdicionar:hover {
+            background: #1d4ed8;
+            transform: scale(1.04);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            padding: 18px;
+        }
+
+        .modal.ativo {
+            display: flex;
+        }
+
+        .modalConteudo {
+            background: #ffffff;
+            width: min(440px, 100%);
+            border-radius: 18px;
+            padding: 24px;
+            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+        }
+
+        .modalConteudoGrande {
+            width: min(620px, 100%);
+            max-height: 82vh;
+            overflow: auto;
+        }
+
+        .modalCabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .modalCabecalho h3 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .fecharModal {
+            border: none;
+            background: #f3f4f6;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .campo {
+            margin-bottom: 14px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #374151;
+            font-weight: 700;
+        }
+
+        .campo input {
+            width: 100%;
+            padding: 12px 13px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .campo input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .botoesModal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .mensagemVazia {
+            margin: 0;
+            color: #6b7280;
+            text-align: center;
+            padding: 24px 8px;
+        }
+
+        .botaoRestaurar {
+            margin-top: 12px;
+            background: #dcfce7;
+            color: #166534;
+            width: 100%;
+        }
+
+        .botaoRestaurar:hover {
+            background: #bbf7d0;
+        }
+
+        .toast {
+            display: none;
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            background: #111827;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25);
+            z-index: 80;
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .toast.ativo {
+            display: block;
+        }
+
+        @media (max-width: 980px) {
+            .kanban {
+                grid-template-columns: repeat(2, minmax(220px, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            .topo {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .kanban {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+
+            .botoesModal {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="topo">
+        <div>
+            <h1>Operação RH</h1>
+            <p>Gerencie candidatos por etapa do processo seletivo.</p>
+        </div>
+
+        <div class="acoesTopo">
+            <button class="botaoExcluidos" onclick="abrirExcluidos()">Excluídos</button>
+        </div>
+    </header>
+
+    <main class="kanban">
+        <section class="coluna">
+            <div class="tituloColuna">
+                <h2>Novo</h2>
+                <span class="contador" id="contadorNovo">0</span>
+            </div>
+            <div class="cards" id="colunaNovo"></div>
+        </section>
+
+        <section class="coluna">
+            <div class="tituloColuna">
+                <h2>Em Análise</h2>
+                <span class="contador" id="contadorAnalise">0</span>
+            </div>
+            <div class="cards" id="colunaAnalise"></div>
+        </section>
+
+        <section class="coluna">
+            <div class="tituloColuna">
+                <h2>Aprovado</h2>
+                <span class="contador" id="contadorAprovado">0</span>
+            </div>
+            <div class="cards" id="colunaAprovado"></div>
+        </section>
+
+        <section class="coluna">
+            <div class="tituloColuna">
+                <h2>Reprovado</h2>
+                <span class="contador" id="contadorReprovado">0</span>
+            </div>
+            <div class="cards" id="colunaReprovado"></div>
+        </section>
+    </main>
+
+    <button class="botaoAdicionar" onclick="abrirModal()">+</button>
+
+    <div id="modal" class="modal">
+        <div class="modalConteudo">
+            <div class="modalCabecalho">
+                <h3>Novo Candidato</h3>
+                <button class="fecharModal" onclick="fecharModal()">×</button>
+            </div>
+
+            <div class="campo">
+                <label for="candidatoNome">Nome</label>
+                <input type="text" id="candidatoNome" placeholder="Nome do candidato">
+            </div>
+
+            <div class="campo">
+                <label for="candidatoEmail">E-mail</label>
+                <input type="email" id="candidatoEmail" placeholder="email@exemplo.com">
+            </div>
+
+            <div class="campo">
+                <label for="candidatoTelefone">Telefone</label>
+                <input type="tel" id="candidatoTelefone" placeholder="(41) 99999-9999">
+            </div>
+
+            <div class="botoesModal">
+                <button class="botaoSecundario" onclick="fecharModal()">Cancelar</button>
+                <button class="botaoPrimario" id="botaoSalvar" onclick="criarCandidato()">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalExcluidos" class="modal">
+        <div class="modalConteudo modalConteudoGrande">
+            <div class="modalCabecalho">
+                <h3>Candidatos Excluídos</h3>
+                <button class="fecharModal" onclick="fecharExcluidos()">×</button>
+            </div>
+
+            <div id="listaExcluidos"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const apiUrl = window.location.origin.startsWith("http")
+            ? window.location.origin
+            : "http://localhost:8000";
+
+        const colunas = {
+            1: document.getElementById("colunaNovo"),
+            2: document.getElementById("colunaAnalise"),
+            3: document.getElementById("colunaAprovado"),
+            4: document.getElementById("colunaReprovado")
+        };
+
+        const contadores = {
+            1: document.getElementById("contadorNovo"),
+            2: document.getElementById("contadorAnalise"),
+            3: document.getElementById("contadorAprovado"),
+            4: document.getElementById("contadorReprovado")
+        };
+
+        function mostrarMensagem(texto) {
+            const toast = document.getElementById("toast");
+            toast.textContent = texto;
+            toast.classList.add("ativo");
+
+            setTimeout(() => {
+                toast.classList.remove("ativo");
+            }, 2800);
+        }
+
+        async function obterMensagemErro(resposta) {
+            try {
+                const dados = await resposta.json();
+                return dados.detail || "Erro inesperado.";
+            } catch (erro) {
+                return await resposta.text() || "Erro inesperado.";
+            }
+        }
+
+        async function carregarCandidatos() {
+            try {
+                const resposta = await fetch(`${apiUrl}/candidatos`);
+
+                if (!resposta.ok) {
+                    throw new Error(await obterMensagemErro(resposta));
+                }
+
+                const candidatos = await resposta.json();
+
+                Object.values(colunas).forEach(coluna => coluna.innerHTML = "");
+                Object.values(contadores).forEach(contador => contador.textContent = "0");
+
+                candidatos.forEach(candidato => {
+                    if (!colunas[candidato.status_id]) {
+                        return;
+                    }
+
+                    const card = criarCard(candidato);
+                    colunas[candidato.status_id].appendChild(card);
+                });
+
+                atualizarContadores();
+            } catch (erro) {
+                console.error("Erro ao carregar candidatos:", erro);
+                mostrarMensagem("Erro ao carregar candidatos. Confira se a API está rodando.");
+            }
+        }
+
+        function atualizarContadores() {
+            Object.keys(colunas).forEach(statusId => {
+                contadores[statusId].textContent = colunas[statusId].querySelectorAll(".card").length;
+            });
+        }
+
+        function criarCard(candidato) {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.draggable = true;
+            card.dataset.id = candidato.id;
+
+            card.innerHTML = `
+                <div class="cardTopo">
+                    <p class="cardNome">${candidato.nome}</p>
+                    <button class="botaoExcluir" onclick="deletarCard(this)" title="Mover para excluídos">×</button>
+                </div>
+                <div class="cardInfo">
+                    <span>📧 ${candidato.email}</span>
+                    <span>📞 ${candidato.telefone || "Sem telefone"}</span>
+                </div>
+            `;
+
+            card.addEventListener("dragstart", (event) => {
+                event.dataTransfer.setData("candidatoId", candidato.id);
+            });
+
+            return card;
+        }
+
+        async function deletarCard(botao) {
+            const confirmar = confirm("Deseja mover o card para Excluídos?");
+
+            if (!confirmar) {
+                return;
+            }
+
+            const card = botao.closest(".card");
+            const candidatoId = card.dataset.id;
+
+            await atualizarStatusCandidato(candidatoId, 5, "Card movido para Excluídos.");
+        }
+
+        function configurarColuna(idColuna, statusId) {
+            const coluna = document.getElementById(idColuna);
+
+            coluna.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                coluna.classList.add("dragover");
+            });
+
+            coluna.addEventListener("dragleave", () => {
+                coluna.classList.remove("dragover");
+            });
+
+            coluna.addEventListener("drop", async (event) => {
+                event.preventDefault();
+                coluna.classList.remove("dragover");
+
+                const candidatoId = event.dataTransfer.getData("candidatoId");
+                if (!candidatoId) {
+                    return;
+                }
+
+                await atualizarStatusCandidato(candidatoId, statusId, "Status atualizado.");
+            });
+        }
+
+        configurarColuna("colunaNovo", 1);
+        configurarColuna("colunaAnalise", 2);
+        configurarColuna("colunaAprovado", 3);
+        configurarColuna("colunaReprovado", 4);
+
+        async function atualizarStatusCandidato(candidatoId, novoStatusId, mensagemSucesso = "Status atualizado.") {
+            try {
+                const resposta = await fetch(
+                    `${apiUrl}/candidatos/${candidatoId}/status?status_id=${novoStatusId}`,
+                    { method: "PUT" }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error(await obterMensagemErro(resposta));
+                }
+
+                await carregarCandidatos();
+                mostrarMensagem(mensagemSucesso);
+            } catch (erro) {
+                console.error("Erro ao atualizar status:", erro);
+                mostrarMensagem(erro.message || "Erro ao atualizar status.");
+                await carregarCandidatos();
+            }
+        }
+
+        async function criarCandidato() {
+            const candidatoNome = document.getElementById("candidatoNome").value.trim();
+            const candidatoEmail = document.getElementById("candidatoEmail").value.trim();
+            const candidatoTelefone = document.getElementById("candidatoTelefone").value.trim();
+            const botaoSalvar = document.getElementById("botaoSalvar");
+
+            if (candidatoNome === "" || candidatoEmail === "" || candidatoTelefone === "") {
+                mostrarMensagem("Preencha nome, e-mail e telefone.");
+                return;
+            }
+
+            botaoSalvar.disabled = true;
+            botaoSalvar.textContent = "Salvando...";
+
+            try {
+                const resposta = await fetch(`${apiUrl}/candidatos`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nome: candidatoNome,
+                        email: candidatoEmail,
+                        telefone: candidatoTelefone,
+                        vaga_id: 1,
+                        status_id: 1
+                    })
+                });
+
+                if (!resposta.ok) {
+                    throw new Error(await obterMensagemErro(resposta));
+                }
+
+                fecharModal();
+                await carregarCandidatos();
+                mostrarMensagem("Candidato cadastrado com sucesso.");
+            } catch (erro) {
+                console.error("Erro ao criar candidato:", erro);
+                mostrarMensagem(erro.message || "Erro ao criar candidato.");
+            } finally {
+                botaoSalvar.disabled = false;
+                botaoSalvar.textContent = "Salvar";
+            }
+        }
+
+        function abrirModal() {
+            document.getElementById("candidatoNome").value = "";
+            document.getElementById("candidatoEmail").value = "";
+            document.getElementById("candidatoTelefone").value = "";
+            document.getElementById("modal").classList.add("ativo");
+            document.getElementById("candidatoNome").focus();
+        }
+
+        function fecharModal() {
+            document.getElementById("modal").classList.remove("ativo");
+        }
+
+        async function abrirExcluidos() {
+            const modalExcluidos = document.getElementById("modalExcluidos");
+            const listaExcluidos = document.getElementById("listaExcluidos");
+
+            listaExcluidos.innerHTML = "<p class='mensagemVazia'>Carregando...</p>";
+            modalExcluidos.classList.add("ativo");
+
+            try {
+                const resposta = await fetch(`${apiUrl}/candidatos`);
+
+                if (!resposta.ok) {
+                    throw new Error(await obterMensagemErro(resposta));
+                }
+
+                const candidatos = await resposta.json();
+                const excluidos = candidatos.filter(candidato => candidato.status_id === 5);
+
+                listaExcluidos.innerHTML = "";
+
+                if (excluidos.length === 0) {
+                    listaExcluidos.innerHTML = "<p class='mensagemVazia'>Nenhum candidato excluído.</p>";
+                    return;
+                }
+
+                excluidos.forEach(candidato => {
+                    const card = document.createElement("div");
+                    card.className = "card";
+
+                    card.innerHTML = `
+                        <p class="cardNome">${candidato.nome}</p>
+                        <div class="cardInfo">
+                            <span>📧 ${candidato.email}</span>
+                            <span>📞 ${candidato.telefone || "Sem telefone"}</span>
+                        </div>
+                        <button class="botaoRestaurar" onclick="restaurarCandidato(${candidato.id})">Restaurar para Novo</button>
+                    `;
+
+                    listaExcluidos.appendChild(card);
+                });
+            } catch (erro) {
+                console.error("Erro ao carregar excluídos:", erro);
+                listaExcluidos.innerHTML = "<p class='mensagemVazia'>Erro ao carregar candidatos excluídos.</p>";
+            }
+        }
+
+        function fecharExcluidos() {
+            document.getElementById("modalExcluidos").classList.remove("ativo");
+        }
+
+        async function restaurarCandidato(candidatoId) {
+            await atualizarStatusCandidato(candidatoId, 1, "Candidato restaurado para Novo.");
+            fecharExcluidos();
+        }
+
+        document.getElementById("modal").addEventListener("click", function(event) {
+            if (event.target.id === "modal") {
+                fecharModal();
+            }
+        });
+
+        document.getElementById("modalExcluidos").addEventListener("click", function(event) {
+            if (event.target.id === "modalExcluidos") {
+                fecharExcluidos();
+            }
+        });
+
+        document.addEventListener("keydown", function(event) {
+            if (event.key === "Escape") {
+                fecharModal();
+                fecharExcluidos();
+            }
+        });
+
+        document.getElementById("candidatoTelefone").addEventListener("input", function(event) {
+            let valor = event.target.value.replace(/\D/g, "").slice(0, 11);
+
+            if (valor.length > 10) {
+                valor = valor.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+            } else if (valor.length > 6) {
+                valor = valor.replace(/(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
+            } else if (valor.length > 2) {
+                valor = valor.replace(/(\d{2})(\d{0,5})/, "($1) $2");
+            } else if (valor.length > 0) {
+                valor = valor.replace(/(\d{0,2})/, "($1");
+            }
+
+            event.target.value = valor;
+        });
+
+        carregarCandidatos();
+    </script>
+</body>
+</html>
